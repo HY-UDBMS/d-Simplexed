@@ -13,7 +13,7 @@ var ThesisUtils = ThesisUtils || (function(){
 		delaunay_triangles : this.delaunay_triangles,
 		draw_plot : function() {
 			/*
-				LOTS OF HELP HERE FROM:
+				LOTS OF INITIAL D3.JS HELP HERE FROM:
 				https://www.visualcinnamon.com/2015/07/voronoi.html
 				http://bl.ocks.org/d3noob/38744a17f9c0141bcd04
 			*/
@@ -57,7 +57,7 @@ var ThesisUtils = ThesisUtils || (function(){
 
 			// Add the scatterplot of input data
 			svg.selectAll(".dot")
-				.data(data)
+				.data(_args.data)
 				.enter().append("circle")
 				.attr("class", "dot")
 				.attr("r", 5)
@@ -111,7 +111,7 @@ var ThesisUtils = ThesisUtils || (function(){
 				.text("Virtual Cores");
 
 			// address bug in d3-voronoi lib which results in triangles not being created if a lot of points happen to be collinear (in a line)
-			// add a slight "jitter" to each point, which averages to 0
+			// add a slight "jitter" to each point, which averages out to 0
 			// https://github.com/d3/d3-voronoi/issues/12
 			this.voronoi = d3.geom.voronoi()
 				.x(function(d) { return xScale(d.vmem + Math.random() - 0.5) })
@@ -132,6 +132,11 @@ var ThesisUtils = ThesisUtils || (function(){
 					return (plane[3] - plane[1]*vcores - plane[0]*vmem)/plane[2];		
 				};
 
+				// attach function to check if this triangle contains the given vertex
+				triangle.contains_vertex = function(x, y) {
+					return ((triangle[0].vmem == x && triangle[0].vcores == y) || (triangle[1].vmem == x && triangle[1].vcores == y) || (triangle[2].vmem == x && triangle[2].vcores == y));	
+				};
+
 				return triangle;
 			});
 
@@ -150,7 +155,7 @@ var ThesisUtils = ThesisUtils || (function(){
 					.html("<h2>Unknowns</h2>")
 
 				unknowns.forEach(function(unknown) {
-					unknowns_container.append("p").html("<h3>" + JSON.stringify(unknown) + " --> " + ThesisUtils.get_triangle_for_point(unknown.vmem, unknown.vcores) + " </h3>");
+					unknowns_container.append("p").html("<h3>" + JSON.stringify(unknown) + " --> " + JSON.stringify(ThesisUtils.get_triangle_for_point(unknown.vmem, unknown.vcores)) + " </h3>");
 				});
 			}
 
@@ -178,6 +183,7 @@ var ThesisUtils = ThesisUtils || (function(){
 			}
 		},
 		calculate_plane : function(p, q, r) {
+			console.log("calculate_plane: p=" + p + "q=" + q + "r=" + r);
 			/*
 			 * Calculate the plane that rests on points p, q, and r
 			 */
@@ -204,11 +210,11 @@ var ThesisUtils = ThesisUtils || (function(){
 			d = a*p[0] + b*p[1] + c*p[2]; 
 
 			// put into scalar form
-			console.log("Plane equation is: {0}x + {1}y + {2}z = {3}"
+			/*console.log("Plane equation is: {0}x + {1}y + {2}z = {3}"
 				.replace("{0}", a)
 				.replace("{1}", b)
 				.replace("{2}", c)
-				.replace("{3}", d));
+				.replace("{3}", d));*/
 
 			console.log("Solved for Z (time): z = ({3} - {1}y - {0}x)/{2}"
 				.replace("{0}", a)
@@ -217,6 +223,11 @@ var ThesisUtils = ThesisUtils || (function(){
 				.replace("{3}", d));
 
 			return [a, b, c, d];
+		},
+		line_contains_point : function(px, py, x1, y1, x2, y2) {
+			// check if (px, py) is on the line segment (x1, y1) | --- | (x2, y2)
+			// the line contains (px, py) if the distance from (px, py) to (x1, y1) and (x2, y2) is equal to the length of the entire line
+			return (this.euclidean_dist(px, py, x1, y1) + this.euclidean_dist(px, py, x2, y2) == this.euclidean_dist(x1, y1, x2, y2));
 		},
 		triangle_contains_point : function(px, py, x1, y1, x2, y2, x3, y3) {
 			/*console.log("triangle_contains_point({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})"
@@ -234,17 +245,16 @@ var ThesisUtils = ThesisUtils || (function(){
 				// ap x ab, bp x bc and cp x ca
 			// if the sign is the same for all three, the point lies within the triangle
 
-			// TODO: what is point lands on an edge?
 			var ap_ab_det = ((px-x1)*(y2-y1) - (py-y1)*(x2-x1));
 			var bp_bc_det = ((px-x2)*(y3-y2) - (py-y2)*(x3-x2));
 			var cp_ca_det = ((px-x3)*(y1-y3) - (py-y3)*(x1-x3));
 
-//			console.log("triangle_contains_point: <" + px + ", " + py + ">");
-//			console.log("ap_ab_det=" + ap_ab_det);
-//			console.log("bp_bc_det=" + bp_bc_det);
-//			console.log("cp_ca_det=" + cp_ca_det);
+			// we'll count it if it's on the edge
+			var is_on_edge = this.line_contains_point(px, py, x1, y1, x2, y2) ||
+				this.line_contains_point(px, py, x1, y1, x3, y3) ||
+				this.line_contains_point(px, py, x2, y2, x3, y3);
 
-			return (ap_ab_det > 0 && bp_bc_det > 0 && cp_ca_det > 0) || (ap_ab_det < 0 && bp_bc_det < 0 && cp_ca_det < 0);
+			return (ap_ab_det > 0 && bp_bc_det > 0 && cp_ca_det > 0) || (ap_ab_det < 0 && bp_bc_det < 0 && cp_ca_det < 0) || is_on_edge;
 		},
 		get_triangle_for_point : function(vmem, vcores) {
 			// loop thru delaunay_triangles and find the one containing vmem and vcords
@@ -252,26 +262,60 @@ var ThesisUtils = ThesisUtils || (function(){
 			var matching_triangle;
 			
 			for(var i = 0; i < this.delaunay_triangles.length; i++) {
-			var triangle = this.delaunay_triangles[i];
-			//this.delaunay_triangles.forEach(function(triangle) {
+				var triangle = this.delaunay_triangles[i];
 				var x1 = triangle[0].vmem, y1 = triangle[0].vcores,
 					x2 = triangle[1].vmem, y2 = triangle[1].vcores,
 					x3 = triangle[2].vmem, y3 = triangle[2].vcores;
 
-				if(ThesisUtils.triangle_contains_point(px, py, x1, y1, x2, y2, x3, y3)) {
+				if(this.triangle_contains_point(px, py, x1, y1, x2, y2, x3, y3)) {
 					matching_triangle = triangle;
 				}
 			}
-		//	});
 
 			// if no triangle found, it means the point is outside the convex hull / triangles
 			// in this case, find the nearest two points 
 			if(!matching_triangle) {
-				// TODO
 				console.log("No triangle found for point <" + vmem + ", " + vcores + ">, tried following triangles: " + this.delaunay_triangles);
+
+				var nearest_2_points = this.find_nearest_points(px, py, 2);
+				var p1 = nearest_2_points[0].to_point,
+					p2 = nearest_2_points[1].to_point;
+
+
+				// TODO: this isn't working quite right
+
+				// search thru delaunay_triangles for one with these two points
+				// we can assume (based upon context) there will be only 1 triangle with these two points
+				for(var i = 0; i < this.delaunay_triangles.length; i++) {
+					var next_triangle = this.delaunay_triangles[i];
+					if(next_triangle.contains_vertex(p1[0], p1[1]) && next_triangle.contains_vertex(p2[0], p2[1])) {
+						matching_triangle = next_triangle;
+						break;
+					}
+				};
 			}
 	
 			return matching_triangle; 
+		},
+		triangle_contains_vertex(vx, xy, x1, y1, x2, y2, x3, y3) {
+			// check if one of the verticies in the triangle (x1, y1), (x2, y2), (x3, y3) equals (vx, xy)
+			return (vx == x1 && vy == y1) || (vx == x2 && vy == y2) || (vx == x3 && vy == y3);
+		},
+		find_nearest_points(px, py, n) {
+			// find n nearest points from (px, py)
+			// find distance to all data points from (px, py)
+			// sort distances and take n
+			
+			return _args.data.map(function(point) {
+				var point = _args.data[0];
+				var point_x = point.vmem;
+				var point_y = point.vcores;
+
+				return {
+					to_point: [point_x, point_y],
+					distance:  ThesisUtils.euclidean_dist(px, py, point_x, point_y)
+				};
+			}).sort(function(a, b){ return a.distance - b.distance; }).slice(0, n);
 		},
 		euclidean_dist: function(x1, y1, x2, y2) {
 			// calculate euclidean distance between two points
