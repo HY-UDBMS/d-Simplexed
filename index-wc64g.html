@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style> /* set the CSS */
+
+body { font: 12px Arial;}
+
+path { 
+    stroke: steelblue;
+    stroke-width: 0.5;
+    fill: none;
+}
+
+.triangle-link { 
+    stroke: #b44682;
+    stroke-width: 1;
+    fill: none;
+}
+
+.axis path,
+.axis line {
+    fill: none;
+    stroke: grey;
+    stroke-width: 1;
+    shape-rendering: crispEdges;
+}
+
+</style>
+<body>
+
+<!-- load the d3.js library -->    
+<script src="https://d3js.org/d3.v3.min.js"></script>
+<script src="https://d3js.org/d3-dsv.v1.min.js"></script>
+<script src="https://d3js.org/d3-voronoi.v1.min.js"></script>
+<script>
+
+/*
+LOTS OF HELP FROM:
+	https://www.visualcinnamon.com/2015/07/voronoi.html
+	http://bl.ocks.org/d3noob/38744a17f9c0141bcd04
+*/
+
+
+// Set the dimensions of the canvas / graph
+var margin = {top: 50, right: 30, bottom: 50, left: 30},
+    width = 600 - margin.left - margin.right,
+    height = 600 - margin.top - margin.bottom;
+
+// Set the ranges
+var xScale = d3.scale.linear().range([0, width]);
+var yScale = d3.scale.linear().range([height, 0]);
+
+// Define the axes
+var xAxis = d3.svg.axis().scale(xScale)
+    .orient("bottom").ticks(5);
+
+var yAxis = d3.svg.axis().scale(yScale)
+    .orient("left").ticks(5);
+
+// Adds the svg canvas
+var svg = d3.select("body")
+    .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+        .attr("transform", 
+             "translate(" + margin.left + "," + margin.top + ")");
+
+	// input data
+	var data = d3.csv.parse("vmem,vcores\n50,4\n34,4\n20,4\n14,4\n8,4\n2,4\n20,1\n20,2\n20,3\n20,5\n20,7\n20,9\n20,12\n20,15\n24,12\n0,0\n0,16\n64,16\n64,0\n8,12\n40,12\n40,8\n50,10");
+
+    // Scale the range of the data
+    xScale.domain([0, 64]);
+    yScale.domain([0, 16]);
+
+    // Add the scatterplot of input data
+    svg.selectAll(".dot")
+        .data(data)
+        .enter().append("circle")
+		.attr("class", "dot")
+        .attr("r", 5)
+        .attr("cx", function(d) { return xScale(d.vmem); })
+        .attr("cy", function(d) { return yScale(d.vcores); });
+
+	svg.append("text")
+        .attr("x", (width / 2))             
+        .attr("y", 0 - (margin.top / 2))
+        .attr("text-anchor", "middle")  
+        .style("font-size", "16px") 
+        .text("Voronoi Plot + Delaunay Tringulation of Wordcount 64GB Test Cases");
+
+    // Add the X Axis
+   svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis);
+
+	// X-Axis Label
+	svg.append("text")
+        .attr("x", (width / 2))             
+        .attr("y", height + margin.bottom - 10)
+        .attr("text-anchor", "middle")  
+        .style("font-size", "16px") 
+        .text("Virtual Memory");
+    
+	// Add the Y Axis
+    svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis);
+
+    // Y-Axis Label
+    svg.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 0 - margin.left)
+        .attr("x",0 - (height / 2))
+        .attr("dy", "1em")
+		.style("font-size", "16px")
+        .style("text-anchor", "middle")
+        .text("Virtual Cores");
+	
+var voronoi = d3.geom.voronoi()
+		.x(function(d) { return xScale(d.vmem); })
+		.y(function(d) { return yScale(d.vcores); })
+		.clipExtent([[0, 0], [width, height]]);
+
+	//Create the Voronoi grid
+	svg.selectAll(".polygon")
+		.data(voronoi(data))
+		.enter().append("path")
+		.attr("class", "polygon")
+		.attr("d", function(d, i) { return "M" + d.join("L") + "Z"; })
+		.datum(function(d, i) { return d.point; })
+
+
+	// add the Delaunay triangulation
+	var delaunay_triangles = voronoi.triangles(data);
+	svg.selectAll(".triangle-link")
+		.data(delaunay_triangles)
+		.enter().append("polygon")
+		.attr("class", "triangle-link")
+		.attr("points",function(d) {
+        	return d.map(function(d) {
+            	return [xScale(d.vmem),yScale(d.vcores)].join(",");
+        }).join(" ");
+    })
+
+</script>
+</body>

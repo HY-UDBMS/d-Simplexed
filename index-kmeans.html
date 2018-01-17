@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<link rel="stylesheet" type="text/css" href="thesis-styles.css">
+
+<body>
+	<script src="https://d3js.org/d3.v3.min.js"></script>
+	<script src="https://d3js.org/d3-dsv.v1.min.js"></script>
+	<script src="https://d3js.org/d3-voronoi.v1.min.js"></script>
+	<script src="thesis-utils.js"></script>
+	<script>
+
+		var data = [
+			{"vmem":"24", "vcores":"12", "time":"84.9"},
+			{"vmem":"20", "vcores":"1", "time":"382.5"},
+			{"vmem":"20", "vcores":"2", "time":"167"},
+			{"vmem":"20", "vcores":"3", "time":"134.5"},
+			{"vmem":"20", "vcores":"5", "time":"96"},
+			{"vmem":"20", "vcores":"7", "time":"93.5"},
+			{"vmem":"20", "vcores":"9", "time":"92"},
+			{"vmem":"20", "vcores":"12", "time":"86"},
+			{"vmem":"20", "vcores":"15", "time":"87.5"},
+			{"vmem":"50", "vcores":"4", "time":"118"},
+			{"vmem":"34", "vcores":"4", "time":"127"},
+			{"vmem":"20", "vcores":"4", "time":"118.5"},
+			{"vmem":"14", "vcores":"4", "time":"119.5"},
+			{"vmem":"8", "vcores":"4", "time":"175"},
+			{"vmem":"2", "vcores":"4", "time":"719.5"},
+			{"vmem":"8", "vcores":"12", "time":"125.5"},
+			{"vmem":"40", "vcores":"12", "time":"86.5"},
+			{"vmem":"40", "vcores":"8", "time":"82"},
+			{"vmem":"50", "vcores":"10", "time":"88"}
+		];
+
+		var unknowns = [
+			{"vmem":"49", "vcores":"14"},
+			{"vmem":"26", "vcores":"2"},
+			{"vmem":"9", "vcores":"6"},
+			{"vmem":"50", "vcores":"2"},
+			{"vmem":"48", "vcores":"14"},
+			{"vmem":"48", "vcores":"5"},
+			{"vmem":"10", "vcores":"5"},
+			{"vmem":"3", "vcores":"4"},
+			{"vmem":"41", "vcores":"4"},
+			{"vmem":"32", "vcores":"9"}
+		];
+
+		ThesisUtils.init({
+			"chart_title": "KMeans Test Cases",
+			"do_triangulation": true,
+			"do_voronoi": false,
+			"do_unknowns": true,
+			"data": data,
+			"unknowns": unknowns
+		});
+
+		ThesisUtils.draw_plot();
+
+	</script>
+</body>
