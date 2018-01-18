@@ -275,14 +275,15 @@ var ThesisUtils = ThesisUtils || (function(){
 			// if no triangle found, it means the point is outside the convex hull / triangles
 			// in this case, find the nearest two points 
 			if(!matching_triangle) {
-				console.log("No triangle found for point <" + vmem + ", " + vcores + ">, tried following triangles: " + this.delaunay_triangles);
-
 				var nearest_2_points = this.find_nearest_points(px, py, 2);
 				var p1 = nearest_2_points[0].to_point,
 					p2 = nearest_2_points[1].to_point;
 
-
-				// TODO: this isn't working quite right
+				console.log("Nearest 2 points for <{0}, {1}> are {2} and {3}"
+					.replace("{0}", px)
+					.replace("{1}", py)
+					.replace("{2}", p1)
+					.replace("{3}", p2));
 
 				// search thru delaunay_triangles for one with these two points
 				// we can assume (based upon context) there will be only 1 triangle with these two points
@@ -307,10 +308,9 @@ var ThesisUtils = ThesisUtils || (function(){
 			// sort distances and take n
 			
 			return _args.data.map(function(point) {
-				var point = _args.data[0];
 				var point_x = point.vmem;
 				var point_y = point.vcores;
-
+				
 				return {
 					to_point: [point_x, point_y],
 					distance:  ThesisUtils.euclidean_dist(px, py, point_x, point_y)
