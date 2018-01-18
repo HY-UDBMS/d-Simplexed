@@ -155,7 +155,8 @@ var ThesisUtils = ThesisUtils || (function(){
 					.html("<h2>Unknowns</h2>")
 
 				unknowns.forEach(function(unknown) {
-					unknowns_container.append("p").html("<h3>" + JSON.stringify(unknown) + " --> " + JSON.stringify(ThesisUtils.get_triangle_for_point(unknown.vmem, unknown.vcores)) + " </h3>");
+					var ref_triangle = ThesisUtils.get_triangle_for_point(unknown.vmem, unknown.vcores);
+					unknowns_container.append("p").html("<h3>" + JSON.stringify(unknown) + " --> " + JSON.stringify(ref_triangle) + ", estimated value = " + ref_triangle.planeValue(unknown.vmem, unknown.vcores) + "</h3>");
 				});
 			}
 
