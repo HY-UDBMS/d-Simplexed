@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<link rel="stylesheet" type="text/css" href="../src/thesis-styles.css">
+
+<body>
+	<script src="https://d3js.org/d3.v3.min.js"></script>
+	<script src="https://d3js.org/d3-dsv.v1.min.js"></script>
+	<script src="https://d3js.org/d3-voronoi.v1.min.js"></script>
+	<script src="../src/thesis-utils.js"></script>
+	<script>
+
+		var data = [
+			{"vmem":"24", "vcores":"12", "time":"915"},
+			{"vmem":"20", "vcores":"1", "time":"1752.5"},
+			{"vmem":"20", "vcores":"2", "time":"1052.5"},
+			{"vmem":"20", "vcores":"3", "time":"923.5"},
+			{"vmem":"20", "vcores":"5", "time":"833"},
+			{"vmem":"20", "vcores":"7", "time":"915.5"},
+			{"vmem":"20", "vcores":"9", "time":"952"},
+			{"vmem":"20", "vcores":"12", "time":"977"},
+			{"vmem":"50", "vcores":"4", "time":"643.5"},
+			{"vmem":"34", "vcores":"4", "time":"668"},
+			{"vmem":"20", "vcores":"4", "time":"837.5"},
+			{"vmem":"14", "vcores":"4", "time":"921"},
+			{"vmem":"8", "vcores":"4", "time":"1537.5"}
+		];
+
+		var unknowns = [
+			{"vmem":"2", "vcores":"4"},
+			{"vmem":"22", "vcores":"15"},
+			{"vmem":"15", "vcores":"12"},
+			{"vmem":"21", "vcores":"9"},
+			{"vmem":"50", "vcores":"5"},
+			{"vmem":"7", "vcores":"10"},
+			{"vmem":"48", "vcores":"4"},
+			{"vmem":"44", "vcores":"10"},
+			{"vmem":"27", "vcores":"8"},
+			{"vmem":"45", "vcores":"10"}
+		];
+
+		ThesisUtils.init({
+			"chart_title": "Pagerank Test Cases",
+			"do_triangulation": true,
+			"do_voronoi": false,
+			"do_unknowns": true,
+			"data": data,
+			"unknowns": unknowns
+		});
+
+		ThesisUtils.draw_plot();
+
+	</script>
+</body>

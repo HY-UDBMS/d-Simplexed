@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<link rel="stylesheet" type="text/css" href="../src/thesis-styles.css">
+
+<body>
+	<script src="https://d3js.org/d3.v3.min.js"></script>
+	<script src="https://d3js.org/d3-dsv.v1.min.js"></script>
+	<script src="https://d3js.org/d3-voronoi.v1.min.js"></script>
+	<script src="../src/thesis-utils.js"></script>
+	<script>
+
+		var data = [
+			{"vmem":"24", "vcores":"12", "time":"205"},
+			{"vmem":"20", "vcores":"1", "time":"783.5"},
+			{"vmem":"20", "vcores":"2", "time":"428.5"},
+			{"vmem":"20", "vcores":"3", "time":"316.5"},
+			{"vmem":"20", "vcores":"5", "time":"286"},
+			{"vmem":"20", "vcores":"7", "time":"194.5"},
+			{"vmem":"20", "vcores":"9", "time":"199"},
+			{"vmem":"20", "vcores":"12", "time":"194.5"},
+			{"vmem":"20", "vcores":"15", "time":"187"},
+			{"vmem":"50", "vcores":"4", "time":"267"},
+			{"vmem":"34", "vcores":"4", "time":"264"},
+			{"vmem":"20", "vcores":"4", "time":"256.5"},
+			{"vmem":"14", "vcores":"4", "time":"255"},
+			{"vmem":"8", "vcores":"4", "time":"691.5"},
+			{"vmem":"2", "vcores":"4", "time":"932"}
+		];
+
+		var unknowns = [
+			{"vmem":"29", "vcores":"8"},
+			{"vmem":"46", "vcores":"10"},
+			{"vmem":"26", "vcores":"8"},
+			{"vmem":"46", "vcores":"9"},
+			{"vmem":"26", "vcores":"6"},
+			{"vmem":"46", "vcores":"10"},
+			{"vmem":"23", "vcores":"12"},
+			{"vmem":"8", "vcores":"5"},
+			{"vmem":"55", "vcores":"12"},
+			{"vmem":"2", "vcores":"6"}
+		];
+
+		ThesisUtils.init({
+			"chart_title": "Bayes Test Cases",
+			"do_triangulation": true,
+			"do_voronoi": false,
+			"do_unknowns": true,
+			"data": data,
+			"unknowns": unknowns
+		});
+
+		ThesisUtils.draw_plot();
+
+	</script>
+</body>

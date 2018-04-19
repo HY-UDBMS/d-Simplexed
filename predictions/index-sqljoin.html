@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<link rel="stylesheet" type="text/css" href="../src/thesis-styles.css">
+
+<body>
+	<script src="https://d3js.org/d3.v3.min.js"></script>
+	<script src="https://d3js.org/d3-dsv.v1.min.js"></script>
+	<script src="https://d3js.org/d3-voronoi.v1.min.js"></script>
+	<script src="../src/thesis-utils.js"></script>
+	<script>
+
+		var data = [
+			{"vmem":"24", "vcores":"12", "time":"302"},
+			{"vmem":"20", "vcores":"1", "time":"802"},
+			{"vmem":"20", "vcores":"2", "time":"482"},
+			{"vmem":"20", "vcores":"3", "time":"371.5"},
+			{"vmem":"20", "vcores":"5", "time":"292.5"},
+			{"vmem":"20", "vcores":"7", "time":"289.5"},
+			{"vmem":"20", "vcores":"9", "time":"322.5"},
+			{"vmem":"20", "vcores":"12", "time":"349.5"},
+			{"vmem":"20", "vcores":"15", "time":"290.5"},
+			{"vmem":"50", "vcores":"4", "time":"351.5"},
+			{"vmem":"34", "vcores":"4", "time":"344.5"},
+			{"vmem":"20", "vcores":"4", "time":"335"},
+			{"vmem":"14", "vcores":"4", "time":"334"},
+			{"vmem":"8", "vcores":"4", "time":"325"},
+			{"vmem":"2", "vcores":"4", "time":"356"}
+		];
+
+		var unknowns = [
+			{"vmem":"15", "vcores":"6"},
+			{"vmem":"12", "vcores":"2"},
+			{"vmem":"26", "vcores":"15"},
+			{"vmem":"14", "vcores":"12"},
+			{"vmem":"10", "vcores":"8"},
+			{"vmem":"51", "vcores":"4"},
+			{"vmem":"39", "vcores":"9"},
+			{"vmem":"22", "vcores":"12"},
+			{"vmem":"19", "vcores":"4"},
+			{"vmem":"34", "vcores":"4"}
+		];
+
+		ThesisUtils.init({
+			"chart_title": "SQL Join Test Cases",
+			"do_triangulation": true,
+			"do_voronoi": false,
+			"do_unknowns": true,
+			"data": data,
+			"unknowns": unknowns
+		});
+
+		ThesisUtils.draw_plot();
+
+	</script>
+</body>
