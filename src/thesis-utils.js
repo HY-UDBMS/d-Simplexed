@@ -158,6 +158,14 @@ var ThesisUtils = ThesisUtils || (function(){
 					var ref_triangle = ThesisUtils.get_triangle_for_point(unknown.vmem, unknown.vcores);
 					unknowns_container.append("p").html("<h3>" + JSON.stringify(unknown) + " --> " + JSON.stringify(ref_triangle) + ", estimated value = " + ref_triangle.planeValue(unknown.vmem, unknown.vcores) + "</h3>");
 				});
+
+				unknowns_container.append("h2")
+					.text("Predictions (clean output)");
+
+				unknowns.forEach(function(unknown) {
+					var ref_triangle = ThesisUtils.get_triangle_for_point(unknown.vmem, unknown.vcores);
+					unknowns_container.append("pre").html(ref_triangle.planeValue(unknown.vmem, unknown.vcores));
+				});
 			}
 
 			//Create the Voronoi grid
@@ -258,7 +266,8 @@ var ThesisUtils = ThesisUtils || (function(){
 			return (ap_ab_det > 0 && bp_bc_det > 0 && cp_ca_det > 0) || (ap_ab_det < 0 && bp_bc_det < 0 && cp_ca_det < 0) || is_on_edge;
 		},
 		get_triangle_for_point : function(vmem, vcores) {
-			// loop thru delaunay_triangles and find the one containing vmem and vcords
+			console.log("Finding nearest triangle for vmem=" + vmem + " vcores=" + vcores);
+			// loop thru delaunay_triangles and find the one containing vmem and vcores
 			var px = vmem, py = vcores;
 			var matching_triangle;
 			
