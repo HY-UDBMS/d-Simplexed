@@ -43,13 +43,14 @@ var ThesisUtils = ThesisUtils || (function(){
 				.append("svg")
 					.attr("width", width + margin.left + margin.right)
 					.attr("height", height + margin.top + margin.bottom)
+					.attr("class", "graph-svg")
 				.append("g")
 					.attr("transform", 
 						 "translate(" + margin.left + "," + margin.top + ")")
 				
 			// Scale the range of the data
-			xScale.domain([0, 64]);
-			yScale.domain([0, 16]);
+			xScale.domain([0, _args.xscale_max || 64]);
+			yScale.domain([0,  _args.xscale_max || 16]);
 
 			var showTooltip = function(d) {
 				notifier.html("<h2>Last Point:</h2><h2>" + JSON.stringify(d) + "</h2>");
@@ -93,7 +94,7 @@ var ThesisUtils = ThesisUtils || (function(){
 				.attr("y", height + margin.bottom - 10)
 				.attr("text-anchor", "middle")  
 				.style("font-size", "16px") 
-				.text("Virtual Memory");
+				.text("Virtual Memory (GB)");
 			
 			// Add the Y Axis
 			svg.append("g")
@@ -103,7 +104,7 @@ var ThesisUtils = ThesisUtils || (function(){
 			// Y-Axis Label
 			svg.append("text")
 				.attr("transform", "rotate(-90)")
-				.attr("y", 0 - margin.left)
+				.attr("y", 0 - margin.left - 10)
 				.attr("x",0 - (height / 2))
 				.attr("dy", "1em")
 				.style("font-size", "16px")
