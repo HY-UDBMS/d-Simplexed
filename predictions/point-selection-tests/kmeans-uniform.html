@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<link rel="stylesheet" type="text/css" href="../../src/thesis-styles.css">
+
+<body>
+	<script src="https://d3js.org/d3.v3.min.js"></script>
+	<script src="https://d3js.org/d3-dsv.v1.min.js"></script>
+	<script src="https://d3js.org/d3-voronoi.v1.min.js"></script>
+	<script src="../../src/thesis-utils.js"></script>
+	<script>
+
+		/* Build model using this data */
+		var data = [
+			{"vmem":"1", "vcores":"1", "time":"2617"},
+			{"vmem":"6", "vcores":"1", "time":"932"},
+			{"vmem":"2", "vcores":"2", "time":"1060"},
+			{"vmem":"5", "vcores":"2", "time":"700"},
+			{"vmem":"3", "vcores":"3", "time":"859"},
+			{"vmem":"4", "vcores":"4", "time":"624"},
+			{"vmem":"2", "vcores":"5", "time":"893"},
+			{"vmem":"5", "vcores":"5", "time":"575"},
+			{"vmem":"1", "vcores":"6", "time":"722"},
+			{"vmem":"6", "vcores":"6", "time":"444"}
+		];
+
+		var unknowns = [
+			{"vmem":"2", "vcores":"1"},
+			{"vmem":"3", "vcores":"1"},
+			{"vmem":"4", "vcores":"1"},
+			{"vmem":"5", "vcores":"1"},
+			{"vmem":"1", "vcores":"2"},
+			{"vmem":"3", "vcores":"2"},
+			{"vmem":"4", "vcores":"2"},
+			{"vmem":"6", "vcores":"2"},
+			{"vmem":"1", "vcores":"3"},
+			{"vmem":"2", "vcores":"3"},
+			{"vmem":"4", "vcores":"3"},
+			{"vmem":"5", "vcores":"3"},
+			{"vmem":"6", "vcores":"3"},
+			{"vmem":"1", "vcores":"4"},
+			{"vmem":"2", "vcores":"4"},
+			{"vmem":"3", "vcores":"4"},
+			{"vmem":"5", "vcores":"4"},
+			{"vmem":"6", "vcores":"4"},
+			{"vmem":"1", "vcores":"5"},
+			{"vmem":"3", "vcores":"5"},
+			{"vmem":"4", "vcores":"5"},
+			{"vmem":"6", "vcores":"5"},
+			{"vmem":"2", "vcores":"6"},
+			{"vmem":"3", "vcores":"6"},
+			{"vmem":"4", "vcores":"6"},
+			{"vmem":"5", "vcores":"6"}
+		];
+
+		ThesisUtils.init({
+			"chart_title": "KMeans Test Cases",
+			"do_triangulation": true,
+			"do_voronoi": false,
+			"do_unknowns": true,
+			"data": data,
+			"unknowns": unknowns,
+			"xscale_max": 8,
+			"yscale_max": 8
+		});
+
+		ThesisUtils.draw_plot();
+
+	</script>
+</body>
