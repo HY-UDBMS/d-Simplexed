@@ -23,7 +23,7 @@ seed_points = 15;
 
 # the one with the biggest range is the one we need to normalize the others against for sampling
 
-print "Initial Latin Hypercube Samples"
+print "Picking Adaptive Latin Hypercube Sample"
 for i,f in enumerate(features):
 	print("f" + str(i) + ": [{0}, {1}]".replace("{0}", str(f[0])).replace("{1}", str(f[1])))
 print "Seed point count: " + str(seed_points)
