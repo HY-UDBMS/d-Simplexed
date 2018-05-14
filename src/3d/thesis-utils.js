@@ -61,7 +61,7 @@ var ThesisUtils = ThesisUtils || (function(){
 				.data(_args.data)
 				.enter().append("circle")
 				.attr("class", "dot")
-				.attr("r", 5)
+				.attr("r", 8)
 				.attr("cx", function(d) { return xScale(d.vmem); })
 				.attr("cy", function(d) { return yScale(d.vcores); })
 				.on("mouseover", showTooltip)

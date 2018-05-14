@@ -7,8 +7,8 @@ path {
 }
 
 .triangle-link { 
-    stroke: #b44682;
-    stroke-width: 1;
+    stroke: black;
+    stroke-width: 2;
     fill: none;
 }
 
@@ -16,7 +16,7 @@ path {
 .axis line {
     fill: none;
     stroke: grey;
-    stroke-width: 1;
+    stroke-width: 2;
     shape-rendering: crispEdges;
 }
 
