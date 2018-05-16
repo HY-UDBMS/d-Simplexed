@@ -53,11 +53,8 @@ model_points = [[f1,f2] for [f1,f2,f3] in model_points_full]
 # do triangulation with model_points
 # refer: https://pythonhosted.org/pyhull/
 tri = DelaunayTri(model_points)
-#print("Points " + str(tri.points))
-#print("Vertices " + str(tri.vertices))
-print("tri " + str(tri.simplices))
 
-# https://stackoverflow.com/questions/36270116/how-do-i-define-a-hyperplane-in-python-given-4-points-how-do-i-then-define-the
+# print("tri " + str(tri.simplices))
 
 for simplex in tri.simplices:
 	p1 = [simplex.coords[0].item(0), simplex.coords[0].item(1), get_runtime([simplex.coords[0].item(0), simplex.coords[0].item(1)])]

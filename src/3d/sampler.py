@@ -20,7 +20,8 @@ def find_nearest(data, sample):
 
 # quicker way to LHS sample from a discrete set of features
 # is easy to impl but has limitation that we can only return len(f1) samples
-def seed_sample_v2():
+def seed_sample_v2(features):
+	f1,f2 = features
 	# sizeof f1 must equal sizeof f2
 	f1 = [10, 20, 30, 40, 50]
 	f2 = [5, 10, 15, 20, 25]
@@ -67,7 +68,20 @@ def seed_sample(seed_points, f1, f2):
 
 	return scaled_samples
 
-def next_adaptive_sample(available_points):
+# model_points = points to create model with
+# sample = [f1,f2],runtime -- sample to calculate utility for
+def utility(model_points, sample):
+	# construct DT model with model_points and sample
+	# calculate utility using sample
+	return random.random() # TODO return something real here yo
+
+# current_model_points = points in current delaunay model
+# available_points = points that can be added to the model
+def next_adaptive_sample(current_model_points, available_points):
+	print "next_adaptive_sample: sizeof current_model_points + available_points = " + str(len(current_model_points) + len(available_points))
+	# after some threshold, you can't really LHS sample anymore because there are too many "holes" in the mesh
+	# better to do it randomly after some threshold
+
 	# re-lhs n samples
 	# for each sample, construct model with it and calculate runtime
 	# then take dist between point and 3-nearest neighbors in 3d space
@@ -75,4 +89,22 @@ def next_adaptive_sample(available_points):
 
 	# but for now, just do rand
 	random.shuffle(available_points)
-	return available_points.pop()
+
+	utils = {}
+	for i,hist_point in enumerate(available_points):
+		cfg = hist_point[0]
+		runtime = hist_point[1]
+		print str(i) + " checking " + str(cfg) + " --> " +str(runtime)
+		utils[i] = utility(available_points, hist_point)
+
+	print "determined utils: " + str(utils)
+	highest_util_idx = 0
+	highest_util_val = utils[0]
+	for key,val in utils.items():
+		if val > highest_util_val:
+			highest_util_val = val
+			highest_util_idx = key
+
+	print "LARGEST utility ({}) belongs to {}".format(highest_util_val, available_points[highest_util_idx])
+	return available_points.pop(highest_util_idx)
+
