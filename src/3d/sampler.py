@@ -66,3 +66,13 @@ def seed_sample(seed_points, f1, f2):
 		print('%.3f' % f1_sample + "\t" + '%.3f' % f2_sample + "\t")
 
 	return scaled_samples
+
+def next_adaptive_sample(available_points):
+	# re-lhs n samples
+	# for each sample, construct model with it and calculate runtime
+	# then take dist between point and 3-nearest neighbors in 3d space
+	# the point with the highest distance wins
+
+	# but for now, just do rand
+	random.shuffle(available_points)
+	return available_points.pop()

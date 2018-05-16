@@ -83,12 +83,41 @@ for [a,b],c in hist_data:
 	sample_count += 1
 	print "{}: Predicted={} Actual={}, MPE={}%".format([a,b], est_runtime, actual_runtime, pct_err * 100)
 
+#############
 print "Mean percent error over {} remaining samples: {}%".format(sample_count, round(total_err/sample_count * 100, 2))
+#############
 
-# predict remaining hist_data points and note error over all
+# then add 1-by-1 new points via adaptive sampling, re-building the model and noting the error
 
-# then add 1-by-1 new points via adaptive sampling, re-building the model and nothing the error
+model_samples = list(seed_samples)
+while len(hist_data) > 1:
+	# grab next sample and remove from hist_data
+	print "len(hist_data) BEFORE " + str(len(hist_data))
+	next_sample = sampler.next_adaptive_sample(hist_data)
+	print "len(list_data) AFTER " + str(len(hist_data))
 
+	print "next_sample=" + str(next_sample)
+	model_samples.append(next_sample)
+
+	dt = DelaunayModel(model_samples)
+	dt.construct_model()
+
+	total_err = 0 
+	sample_count = 0
+	for [a,b],c in hist_data:
+		est_runtime = dt.predict([a,b])
+		actual_runtime = lookup_runtime([a,b], hist_data);
+		pct_err = round((actual_runtime - est_runtime) / actual_runtime, 5)
+		total_err += pct_err
+		sample_count += 1
+		print "{}: Predicted={} Actual={}, MPE={}%".format([a,b], est_runtime, actual_runtime, pct_err * 100)
+
+	#############
+	print "Mean percent error over {} remaining samples: {}%".format(sample_count, round(total_err/sample_count * 100, 2))
+	#############
+# get next point via adaptive sampling
+#while len(hist_data) > 0:
+	# pop next and go
 
 
 

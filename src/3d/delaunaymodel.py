@@ -43,7 +43,7 @@ class DelaunayModel:
 	def construct_model(self):
 		# build model w/o runtime
 		model_points_features = [[f1,f2] for [[f1,f2],f3] in self.model_points]
-
+		print "construct_model point count: " + str(len(self.model_points))
 		print "Constructing model with points: " + str(self.model_points)
 
 		# do initial triangulation with model_points
@@ -63,14 +63,6 @@ class DelaunayModel:
 				predicted_runtime = self.make_prediction(hyperplane, point)
 				print("Point {} has predicted runtime -----> {}".format(point, predicted_runtime));
 				return predicted_runtime
-		#	for f1,f2 in unknowns:
-		#		if simplex.in_simplex([f1, f2]):
-		#			print "need to predict for " + str([f1, f2])
-		#			print("TODO calculate hyperplane for <{}, {}, {}> <{}, {}, {}> <{}, {}, {}>".format(p1[0], p1[1], p1[2], p2[0], p2[1], p2[2], p3[0], p3[1], p3[2]))
-
-		#			hyperplane = calc_hyperplane(p1, p2, p3)
-		#			predicted_runtime = make_prediction(hyperplane, [f1, f2])
-		#			print "predicted runtime " + str(predicted_runtime)
 
 
 
