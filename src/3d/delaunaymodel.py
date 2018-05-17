@@ -50,8 +50,21 @@ class DelaunayModel:
 		# refer: https://pythonhosted.org/pyhull/
 		self.tri = DelaunayTri(model_points_features)
 
+	# point = [f1,f2]
+	# return coords of hyperplane that point lies in as a 3-tuple of coords
+	def hyperplane_for(self, point):
+		for simplex in self.tri.simplices:
+			if simplex.in_simplex([point[0], point[1]]):
+				p1 = [simplex.coords[0].item(0), simplex.coords[0].item(1), self.get_runtime([simplex.coords[0].item(0), simplex.coords[0].item(1)])]
+				p2 = [simplex.coords[1].item(0), simplex.coords[1].item(1), self.get_runtime([simplex.coords[1].item(0), simplex.coords[1].item(1)])]
+				p3 = [simplex.coords[2].item(0), simplex.coords[2].item(1), self.get_runtime([simplex.coords[2].item(0), simplex.coords[2].item(1)])]
+				return [p1, p2, p3]
+
 	def predict(self, point):
 		print "predict point=" + str(point)
+		found_simplex = False
+		
+		# TODO: use hyperplane_for fn here
 		for simplex in self.tri.simplices:
 			if simplex.in_simplex([point[0], point[1]]):
 				p1 = [simplex.coords[0].item(0), simplex.coords[0].item(1), self.get_runtime([simplex.coords[0].item(0), simplex.coords[0].item(1)])]
@@ -64,5 +77,7 @@ class DelaunayModel:
 				print("Point {} has predicted runtime -----> {}".format(point, predicted_runtime));
 				return predicted_runtime
 
+		print "No simplex found in DT for point " + str(point) + "!!!"
+		assert found_simplex
 
 

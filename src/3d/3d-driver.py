@@ -36,7 +36,7 @@ for line in raw_hist_data.split('\n'):
 		continue
 
 	split = line.split()
-	hist_data.append([[int(split[0]), int(split[1])], float(split[2])])
+	hist_data.append([[int(split[0]), int(split[1])], round(100*float(split[2]), 1)])
 
 def lookup_runtime(rt_cfg, hist_data):
 	for hist_cfg,runtime in hist_data:
@@ -123,7 +123,8 @@ print "Mean percent error over {} remaining samples: {}%".format(sample_count, r
 # then add 1-by-1 new points via adaptive sampling, re-building the model and noting the error
 
 model_samples = list(seed_samples)
-while len(hist_data) > 1:
+# stop at len_hist(data) == 3 because we can't build a model with < 3 points
+while len(hist_data) > 3:
 	# grab next sample and remove from hist_data
 	print "len(hist_data) BEFORE " + str(len(hist_data))
 	next_sample = sampler.next_adaptive_sample(model_samples, hist_data)
