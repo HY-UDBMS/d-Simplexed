@@ -153,5 +153,22 @@ while len(hist_data) > 3:
 #while len(hist_data) > 0:
 	# pop next and go
 
+# build COMPLETE model with all hist data
+model_samples = model_samples + hist_data
+print "building final model with samples " + str(model_samples)
+print "len(model_samples)=" + str(len(model_samples))
+dt = DelaunayModel(model_samples)
+dt.construct_model()
 
+# with constructed model, use it to predict more theoretical runtimes
+f1_min = 10
+f1_max = 50
 
+f2_min = 5
+f2_max = 25
+
+for f1_i in range(f1_min, f1_max+1):
+	for f2_i in range(f2_min, f2_max+1):
+		# use this to grab output values
+		# python 3d-driver.py | grep datagen | cut -c 9- > out.dat
+		print "datagen:{}\t{}\t{}".format(f1_i, f2_i, dt.predict([f1_i, f2_i]))
