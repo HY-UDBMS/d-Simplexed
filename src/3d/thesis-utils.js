@@ -79,7 +79,7 @@ var ThesisUtils = ThesisUtils || (function(){
 				.attr("x", (width / 2))             
 				.attr("y", 0 - (margin.top / 2))
 				.attr("text-anchor", "middle")  
-				.style("font-size", "16px") 
+				.style("font-size", "25px") 
 				.text(chart_title);
 
 			// Add the X Axis
@@ -91,10 +91,10 @@ var ThesisUtils = ThesisUtils || (function(){
 			// X-Axis Label
 			svg.append("text")
 				.attr("x", (width / 2))             
-				.attr("y", height + margin.bottom - 10)
+				.attr("y", height + margin.bottom - 3)
 				.attr("text-anchor", "middle")  
-				.style("font-size", "16px") 
-				.text("Virtual Memory (GB)");
+				.style("font-size", "22px") 
+				.text("Memory (GB)");
 			
 			// Add the Y Axis
 			svg.append("g")
@@ -104,12 +104,12 @@ var ThesisUtils = ThesisUtils || (function(){
 			// Y-Axis Label
 			svg.append("text")
 				.attr("transform", "rotate(-90)")
-				.attr("y", 0 - margin.left - 10)
+				.attr("y", 0 - margin.left - 25)
 				.attr("x",0 - (height / 2))
 				.attr("dy", "1em")
-				.style("font-size", "16px")
+				.style("font-size", "22px")
 				.style("text-anchor", "middle")
-				.text("Virtual Cores");
+				.text("CPU Cores");
 
 			// address bug in d3-voronoi lib which results in triangles not being created if a lot of points happen to be collinear (in a line)
 			// add a slight "jitter" to each point, which averages out to 0
