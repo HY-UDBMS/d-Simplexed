@@ -3,40 +3,13 @@ import sampler
 
 
 # vmem, vcore --> runtime
-raw_hist_data = """
-10	5	6.3687
-20	5	4.33018
-30	5	1.49257
-40	5	1.38429
-50	5	1.37552
-10	10	5.18841
-20	10	2.87083
-30	10	1.08855
-40	10	1.10772
-50	10	1.01886
-10	15	5.15312
-20	15	2.66598
-30	15	0.93767
-40	15	0.90635
-50	15	1.06719
-10	20	3.26359
-20	20	2.2035
-30	20	0.85163
-40	20	0.93339
-50	20	0.91893
-10	25	3.53785
-20	25	2.13402
-30	25	0.94102
-40	25	0.89912
-50	25	0.88065"""
+hist_data_file = "hist-5g-sm.csv"
 
 hist_data = []
-for line in raw_hist_data.split('\n'):
-	if not line:
-		continue
-
-	split = line.split()
-	hist_data.append([[int(split[0]), int(split[1])], round(100*float(split[2]), 1)])
+with open(hist_data_file, "r") as ins:
+	for line in ins:
+		split = line.split()
+		hist_data.append([[int(split[0]), int(split[1])], round(100*float(split[2]), 1)])
 
 def lookup_runtime(rt_cfg, hist_data):
 	for hist_cfg,runtime in hist_data:
