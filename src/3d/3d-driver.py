@@ -1,38 +1,48 @@
 from delaunaymodel import DelaunayModel
 import sampler
 
-
-# vmem, vcore --> runtime
-hist_data_file = "hist-5g-sm.csv"
-
-hist_data = []
-with open(hist_data_file, "r") as ins:
-	for line in ins:
-		split = line.split()
-		hist_data.append([[int(split[0]), int(split[1])], round(100*float(split[2]), 1)])
-
 def lookup_runtime(rt_cfg, hist_data):
 	for hist_cfg,runtime in hist_data:
 		if rt_cfg == hist_cfg:
 			return runtime
 	return None
 
-print "Size of historical data pool: " + str(len(hist_data))
-print hist_data
-
-
-f1 = [10, 20, 30, 40, 50]
-f2 = [5, 10, 15, 20, 25]
-
-seed_samples = sampler.seed_sample_v2([f1, f2]);
-seed_samples = [[[f1,f2], lookup_runtime([f1,f2], hist_data)] for [f1, f2] in seed_samples]
-seed_count = len(seed_samples)
-
 def contains_sample(samples, sample):
 	for a,runtime in samples:
 		if a == sample:
 			return True
 	return False
+
+# f1<tab>f2<tab>runtime(f1,f2)
+#hist_data_file = "hist-5g-sm.csv"
+hist_data_file = "hist-5g-md.csv"
+
+# generate data at the end
+do_datagen = False
+
+print "Reading input from file: " + hist_data_file
+
+# read from file --> hist_data
+hist_data = []
+with open(hist_data_file, "r") as ins:
+	for line in ins:
+		split = line.split()
+		hist_data.append([[int(split[0]), int(split[1])], round(100*float(split[2]), 1)])
+
+input_len = len(hist_data)
+print "Size of historical data pool: " + str(input_len)
+
+# TODO: make this dynamic
+# len(f1) must equal len(f2)
+f1 = [10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50]
+f2 = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]
+feature_space = [f1,f2]
+#f1 = [10, 20, 30, 40, 50]
+#f2 = [5, 10, 15, 20, 25]
+
+seed_samples = sampler.seed_sample_v2([f1, f2]);
+seed_samples = [[[f1,f2], lookup_runtime([f1,f2], hist_data)] for [f1, f2] in seed_samples]
+seed_count = len(seed_samples)
 
 print "Number of seed samples from sampler: " + str(seed_count)
 print "Seed samples from sampler: " + str(seed_samples)
@@ -70,7 +80,7 @@ for seed in seed_samples:
 		print "seed NOT found!!!"
 	
 
-assert len(hist_data) + len(seed_samples) == 25
+assert len(hist_data) + len(seed_samples) == input_len
 
 print "Size of historical data pool: " + str(len(hist_data))
 print "Size of seed_samples: " + str(len(seed_samples))
@@ -100,7 +110,8 @@ model_samples = list(seed_samples)
 while len(hist_data) > 3:
 	# grab next sample and remove from hist_data
 	print "len(hist_data) BEFORE " + str(len(hist_data))
-	next_sample = sampler.next_adaptive_sample(model_samples, hist_data)
+	feature_space = [[10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50],[5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]]
+	next_sample = sampler.next_adaptive_sample(model_samples, hist_data, feature_space)
 	print "len(list_data) AFTER " + str(len(hist_data))
 
 	print "next_sample=" + str(next_sample)
@@ -122,26 +133,24 @@ while len(hist_data) > 3:
 	#############
 	print "Mean percent error over {} remaining samples: {}%".format(sample_count, round(total_err/sample_count * 100, 2))
 	#############
-# get next point via adaptive sampling
-#while len(hist_data) > 0:
-	# pop next and go
 
-# build COMPLETE model with all hist data
-model_samples = model_samples + hist_data
-print "building final model with samples " + str(model_samples)
-print "len(model_samples)=" + str(len(model_samples))
-dt = DelaunayModel(model_samples)
-dt.construct_model()
+if do_datagen:
+	# build COMPLETE model with all hist data
+	model_samples = model_samples + hist_data
+	print "building final model with samples " + str(model_samples)
+	print "len(model_samples)=" + str(len(model_samples))
+	dt = DelaunayModel(model_samples)
+	dt.construct_model()
 
-# with constructed model, use it to predict more theoretical runtimes
-f1_min = 10
-f1_max = 50
+	# with constructed model, use it to predict more theoretical runtimes
+	f1_min = 10
+	f1_max = 50
 
-f2_min = 5
-f2_max = 25
+	f2_min = 5
+	f2_max = 25
 
-for f1_i in range(f1_min, f1_max+1):
-	for f2_i in range(f2_min, f2_max+1):
-		# use this to grab output values
-		# python 3d-driver.py | grep datagen | cut -c 9- > out.dat
-		print "datagen:{}\t{}\t{}".format(f1_i, f2_i, dt.predict([f1_i, f2_i]))
+	for f1_i in range(f1_min, f1_max+1, 2):
+		for f2_i in range(f2_min, f2_max+1):
+			# use this to grab output values
+			# python 3d-driver.py | grep datagen | cut -c 9- > out.dat
+			print "datagen:{}\t{}\t{}".format(f1_i, f2_i, dt.predict([f1_i, f2_i]))
