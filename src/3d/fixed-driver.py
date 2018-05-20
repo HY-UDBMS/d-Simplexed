@@ -1,5 +1,6 @@
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
+from sklearn import linear_model
 import numpy as np
 from delaunaymodel import DelaunayModel
 import sampler
@@ -128,7 +129,6 @@ gp_testset_Y = [[runtime] for [[f1,f2],runtime] in test_set]
 
 # Fit to data using Maximum Likelihood Estimation of the parameters
 gp.fit(gp_training_X, gp_training_Y)
-
 y_pred, sigma = gp.predict(gp_testset_X, return_std=True)
 
 total_err = 0 
@@ -141,7 +141,26 @@ for idx,runtime_val in enumerate(gp_testset_Y):
 	sample_count += 1
 	#print "[GP]{}: Predicted={} Actual={}, MPE={}%".format(gp_testset_X[idx], est_runtime, actual_runtime, pct_err * 100)
 
-print "[Reporting-GP] {}\t{}\t{}".format(len(seed_samples), sample_count, round(total_err/sample_count*100,2))
+mape_gp = round(total_err/sample_count*100,2)
+
+# Use basic multivariate linear regression (X,Y)-->Z
+lm = linear_model.LinearRegression()
+model = lm.fit(gp_training_X, gp_training_Y)
+
+#testX = [(25, x) for x in np.linspace(1, 70, 1000)]
+#print(testX)
+# # Make the prediction on the meshed x-axis (ask for MSE as well)
+y_pred = lm.predict(gp_testset_X)
+total_err = 0 
+sample_count = 0
+for idx,runtime_val in enumerate(gp_testset_Y):
+	est_runtime = y_pred[idx]
+	actual_runtime = runtime_val
+	pct_err = round(abs((actual_runtime - est_runtime) / actual_runtime), 5)
+	total_err += pct_err
+	sample_count += 1
+
+mape_lr = round(total_err/sample_count*100,2)
 
 # determine overall MPE of model with just seed samples
 total_err = 0 
@@ -155,10 +174,11 @@ for [a,b],c in test_set:
 	sample_count += 1
 	print "{}: Predicted={} Actual={}, MPE={}%".format([a,b], est_runtime, actual_runtime, pct_err * 100)
 
-#############
-#print "Mean percent error over {} remaining samples: {}%".format(sample_count, round(total_err/sample_count * 100, 2))
-print "[Reporting] {}\t{}\t{}".format(len(seed_samples), sample_count, round(total_err/sample_count*100,2))
-#############
+mape_dt = round(total_err/sample_count*100,2)
+#print "[Reporting-DT] {}\t{}\t{}".format(len(seed_samples), sample_count, mape_dt)
+#print "[Reporting-GP] {}\t{}\t{}".format(len(seed_samples), sample_count, mape_gp)
+#print "[Reporting-LR] {}\t{}\t{}".format(len(seed_samples), sample_count, mape_lr)
+print "[Reporting] {}\t{}\t{}\t{}".format(len(seed_samples), mape_dt, mape_gp, mape_lr)
 
 # then add 1-by-1 new points via adaptive sampling, re-building the model and noting the error
 #######################################
@@ -203,10 +223,28 @@ while len(hist_data) > 3:
 		pct_err = round(abs((actual_runtime - est_runtime) / actual_runtime), 5)
 		total_err += pct_err
 		sample_count += 1
-		#print "[GP]{}: Predicted={} Actual={}, MPE={}%".format(gp_testset_X[idx], est_runtime, actual_runtime, pct_err * 100)
 
-	print "[Reporting-GP] {}\t{}\t{}".format(len(model_samples), sample_count, round(total_err/sample_count*100,2))
+	mape_gp = round(total_err/sample_count*100,2)
 	
+	# Use basic multivariate linear regression (X,Y)-->Z
+	lm = linear_model.LinearRegression()
+	model = lm.fit(gp_training_X, gp_training_Y)
+
+	#testX = [(25, x) for x in np.linspace(1, 70, 1000)]
+	#print(testX)
+	# # Make the prediction on the meshed x-axis (ask for MSE as well)
+	y_pred = lm.predict(gp_testset_X)
+	total_err = 0 
+	sample_count = 0
+	for idx,runtime_val in enumerate(gp_testset_Y):
+		est_runtime = y_pred[idx]
+		actual_runtime = runtime_val
+		pct_err = round(abs((actual_runtime - est_runtime) / actual_runtime), 5)
+		total_err += pct_err
+		sample_count += 1
+
+	mape_lr = round(total_err/sample_count*100, 2)
+
 	total_err = 0 
 	sample_count = 0
 	for [a,b],c in test_set:
@@ -217,8 +255,9 @@ while len(hist_data) > 3:
 		sample_count += 1
 		print "{}: Predicted={} Actual={}, MPE={}%".format([a,b], est_runtime, actual_runtime, pct_err * 100)
 
-	#############
-	#print "Mean percent error over {} remaining samples: {}%".format(sample_count, round(total_err/sample_count * 100, 2))
-	print "[Reporting] {}\t{}\t{}".format(len(model_samples), sample_count, round(total_err/sample_count*100,2))
-	#############
-
+	mape_dt = round(total_err/sample_count*100,2)
+	
+	#print "[Reporting-DT] {}\t{}\t{}".format(len(model_samples), sample_count, mape_dt)
+	#print "[Reporting-GP] {}\t{}\t{}".format(len(model_samples), sample_count, mape_gp)
+	#print "[Reporting-LR] {}\t{}\t{}".format(len(model_samples), sample_count, mape_lr)
+	print "[Reporting] {}\t{}\t{}\t{}".format(len(model_samples), mape_dt, mape_gp, mape_lr)
