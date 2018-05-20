@@ -1,3 +1,6 @@
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
+import numpy as np
 from delaunaymodel import DelaunayModel
 import sampler
 import random
@@ -104,9 +107,41 @@ print "hist_data + test_set + seed_samples = " + str(len(hist_data) + len(test_s
 
 assert (len(hist_data) + len(test_set) + len(seed_samples)) == input_len
 
+#######################################
+# Build the model with the seed points
+#######################################
+
+
 # build initial model with seed_samples
 dt = DelaunayModel(seed_samples)
 dt.construct_model()
+
+# Instanciate a Gaussian Process model
+kernel = C(1.0, (1e-3, 1e3)) * RBF(1, (1e-5, 1e5))
+gp = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=3)
+
+gp_training_X = [[f1,f2] for [[f1,f2],runtime] in seed_samples]
+gp_training_Y = [[runtime] for [[f1,f2],runtime] in seed_samples]
+
+gp_testset_X = [[f1,f2] for [[f1,f2],runtime] in test_set]
+gp_testset_Y = [[runtime] for [[f1,f2],runtime] in test_set]
+
+# Fit to data using Maximum Likelihood Estimation of the parameters
+gp.fit(gp_training_X, gp_training_Y)
+
+y_pred, sigma = gp.predict(gp_testset_X, return_std=True)
+
+total_err = 0 
+sample_count = 0
+for idx,runtime_val in enumerate(gp_testset_Y):
+	est_runtime = y_pred[idx]
+	actual_runtime = runtime_val
+	pct_err = round(abs((actual_runtime - est_runtime) / actual_runtime), 5)
+	total_err += pct_err
+	sample_count += 1
+	#print "[GP]{}: Predicted={} Actual={}, MPE={}%".format(gp_testset_X[idx], est_runtime, actual_runtime, pct_err * 100)
+
+print "[Reporting-GP] {}\t{}\t{}".format(len(seed_samples), sample_count, round(total_err/sample_count*100,2))
 
 # determine overall MPE of model with just seed samples
 total_err = 0 
@@ -115,17 +150,20 @@ for [a,b],c in test_set:
 	print "predicting for " + str([a, b])
 	est_runtime = dt.predict([a,b])
 	actual_runtime = lookup_runtime([a,b], test_set);
-	pct_err = round((actual_runtime - est_runtime) / actual_runtime, 5)
+	pct_err = round(abs((actual_runtime - est_runtime) / actual_runtime), 5)
 	total_err += pct_err
 	sample_count += 1
 	print "{}: Predicted={} Actual={}, MPE={}%".format([a,b], est_runtime, actual_runtime, pct_err * 100)
 
 #############
 #print "Mean percent error over {} remaining samples: {}%".format(sample_count, round(total_err/sample_count * 100, 2))
-print "[Reporting] {}\t{}".format(sample_count, round(total_err/sample_count*100,2))
+print "[Reporting] {}\t{}\t{}".format(len(seed_samples), sample_count, round(total_err/sample_count*100,2))
 #############
 
 # then add 1-by-1 new points via adaptive sampling, re-building the model and noting the error
+#######################################
+# Iteratively add points to model and test
+#######################################
 
 model_samples = list(seed_samples)
 # stop at len_hist(data) == 3 because we can't build a model with < 3 points
@@ -142,12 +180,39 @@ while len(hist_data) > 3:
 	dt = DelaunayModel(model_samples)
 	dt.construct_model()
 
+	# Instanciate a Gaussian Process model
+	kernel = C(1.0, (1e-3, 1e3)) * RBF(1, (1e-5, 1e5))
+	gp = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=3)
+
+	gp_training_X = [[f1,f2] for [[f1,f2],runtime] in model_samples]
+	gp_training_Y = [[runtime] for [[f1,f2],runtime] in model_samples]
+
+	gp_testset_X = [[f1,f2] for [[f1,f2],runtime] in test_set]
+	gp_testset_Y = [[runtime] for [[f1,f2],runtime] in test_set]
+
+	# Fit to data using Maximum Likelihood Estimation of the parameters
+	gp.fit(gp_training_X, gp_training_Y)
+
+	y_pred, sigma = gp.predict(gp_testset_X, return_std=True)
+
+	total_err = 0 
+	sample_count = 0
+	for idx,runtime_val in enumerate(gp_testset_Y):
+		est_runtime = y_pred[idx]
+		actual_runtime = runtime_val
+		pct_err = round(abs((actual_runtime - est_runtime) / actual_runtime), 5)
+		total_err += pct_err
+		sample_count += 1
+		#print "[GP]{}: Predicted={} Actual={}, MPE={}%".format(gp_testset_X[idx], est_runtime, actual_runtime, pct_err * 100)
+
+	print "[Reporting-GP] {}\t{}\t{}".format(len(model_samples), sample_count, round(total_err/sample_count*100,2))
+	
 	total_err = 0 
 	sample_count = 0
 	for [a,b],c in test_set:
 		est_runtime = dt.predict([a,b])
 		actual_runtime = lookup_runtime([a,b], test_set);
-		pct_err = round((actual_runtime - est_runtime) / actual_runtime, 5)
+		pct_err = round(abs((actual_runtime - est_runtime) / actual_runtime), 5)
 		total_err += pct_err
 		sample_count += 1
 		print "{}: Predicted={} Actual={}, MPE={}%".format([a,b], est_runtime, actual_runtime, pct_err * 100)
