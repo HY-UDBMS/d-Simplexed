@@ -3,6 +3,12 @@ import numpy as np
 
 class DelaunayModel:
 
+	LOG_DEBUG=False
+
+	def log_debug(self, message):
+		if self.LOG_DEBUG:
+			print "[Debug] " + message
+
 	def __init__(self, points):
 		# TODO pass in --> self.model_points = points
 		# <[f1,f2],runtime(f1, f2)>
@@ -30,8 +36,8 @@ class DelaunayModel:
 		# This evaluates a * x3 + b * y3 + c * z3 which equals d
 		d = np.dot(cp, p3)
 
-		print('The equation is {0}x + {1}y + {2}z = {3}'.format(a, b, c, d))
-		print('The equation is ({3} - {0}x - {1}y)/{2}'.format(a, b, c, d))
+		self.log_debug('The equation is {0}x + {1}y + {2}z = {3}'.format(a, b, c, d))
+		self.log_debug('The equation is ({3} - {0}x - {1}y)/{2}'.format(a, b, c, d))
 
 		return [a, b, c, d]
 
@@ -43,8 +49,8 @@ class DelaunayModel:
 	def construct_model(self):
 		# build model w/o runtime
 		model_points_features = [[f1,f2] for [[f1,f2],f3] in self.model_points]
-		print "construct_model point count: " + str(len(self.model_points))
-		print "Constructing model with points: " + str(self.model_points)
+		self.log_debug("construct_model point count: " + str(len(self.model_points)))
+		self.log_debug("Constructing model with points: " + str(self.model_points))
 
 		# do initial triangulation with model_points
 		# refer: https://pythonhosted.org/pyhull/
@@ -61,7 +67,7 @@ class DelaunayModel:
 				return [p1, p2, p3]
 
 	def predict(self, point):
-		print "predict point=" + str(point)
+		self.log_debug("predict point=" + str(point))
 		found_simplex = False
 		
 		# TODO: use hyperplane_for fn here
@@ -71,10 +77,10 @@ class DelaunayModel:
 				p2 = [simplex.coords[1].item(0), simplex.coords[1].item(1), self.get_runtime([simplex.coords[1].item(0), simplex.coords[1].item(1)])]
 				p3 = [simplex.coords[2].item(0), simplex.coords[2].item(1), self.get_runtime([simplex.coords[2].item(0), simplex.coords[2].item(1)])]
 			
-				print "predicting for " + str(point) + " --> " + str([p1, p2, p3])
+				self.log_debug("predicting for " + str(point) + " --> " + str([p1, p2, p3]))
 				hyperplane = self.calc_hyperplane(p1, p2, p3)
 				predicted_runtime = self.make_prediction(hyperplane, point)
-				print("Point {} has predicted runtime -----> {}".format(point, predicted_runtime));
+				self.log_debug("Point {} has predicted runtime -----> {}".format(point, predicted_runtime))
 				return predicted_runtime
 
 		print "No simplex found in DT for point " + str(point) + "!!!"
