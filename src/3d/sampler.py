@@ -25,48 +25,14 @@ def chunkIt(seq, num):
 # quicker way to LHS sample from a discrete set of features
 # is easy to impl but has limitation that we can only return len(f1) samples
 # TODO: optimize to handle when sizeof f1 != sizeof f2 (scaling needed)
-def seed_sample_v2(features):
+def seed_sample(features, samples):
 	f1,f2 = features
+
 	# sizeof f1 must equal sizeof f2
+	assert len(f1) == len(f2)
 
-	random.shuffle(f1)
-	random.shuffle(f2)
-
-	lhs_samples = []
-	while len(f1) > 0:
-		lhs_samples.append([f1.pop(), f2.pop()])
-	
+	lhs_samples = discrete_lhs([], features, samples)
 	return lhs_samples
-
-# seed_points = number of initial points to grab (must be < than |f1| and |f2|)
-# f1 = [f1_min, f1_max]
-# f2 = [f2_min, f2_max]
-# TODO: optimize to handle when sizeof f1 != sizeof f2 (scaling needed)
-def seed_sample(seed_points, f1, f2):
-	features = [f1, f2]
-
-	# the one with the biggest range is the one we need to normalize the others against for sampling
-	print "Initial Latin Hypercube Samples"
-	for i,f in enumerate(features):
-		print("f" + str(i) + ": [{0}, {1}]".replace("{0}", str(f[0])).replace("{1}", str(f[1])))
-	print "Seed point count: " + str(seed_points)
-	print "----------------------"
-
-	# refer: https://pythonhosted.org/pyDOE/randomized.html
-	samples = lhs(len(features), seed_points, 'maximin')
-	scaled_samples = []
-	for f1,f2 in samples:
-		f1_sample = round(scale_to(0, 1, 0, 64, f1), sample_precision)
-		f2_sample = round(scale_to(0, 1, 0, 64, f2), sample_precision)
-
-		scaled_samples.append([f1_sample, f2_sample])
-
-		print('%.3f' % f1_sample + "\t" + '%.3f' % f2_sample + "\t")
-
-
-	# TODO: this function should not be used anymore --> deprecate it
-
-	return scaled_samples
 
 # taken_points = points in points_space already used in model as array of [[f1,f2]runtime]
 # feature_space = f1=[a, b, c, ..., n], f2=[a, b, c, d, ..., n] -- total range of features
@@ -168,19 +134,18 @@ def next_adaptive_sample(current_model_points, available_points, feature_space):
 	next_samples = []
 
 	# for md model, the LHS samples we get from lhs_sample_v2 is 21
-	lhs_sample_size = 21
-	if available_points < lhs_sample_size:
+	lhs_sample_size = 24
+	if len(available_points) < lhs_sample_size:
 		# not enough points to get a full LHS sample, so we'll consider the rest at once (edge case)
-		next_samples = available_points
+		print "Not enough points remain to LHS"
+		next_samples = [[f1,f2] for [[f1,f2],rt] in available_points]
 	else:
 		#random.shuffle(available_points)
 		#next_samples = available_points[:10] # grab 10 at random
 		print "discrete_lhs current_model_points" + str(current_model_points)
 		print "discrete_lhs feature_space" + str(feature_space)
-		next_samples = discrete_lhs(current_model_points, feature_space, 8)
-		
+		next_samples = discrete_lhs(current_model_points, feature_space, lhs_sample_size)
 		# discrete_lhs returns [f1,f2] values, need to attach actual runtime
-
 
 	utils = {}
 	for i,hist_point in enumerate(next_samples):
@@ -189,7 +154,13 @@ def next_adaptive_sample(current_model_points, available_points, feature_space):
 		#print str(i) + " checking " + str(cfg) + " --> " +str(runtime)
 		utils[i] = utility(current_model_points, cfg)
 
+	# if utils are empty, it means we couldn't get enough samples for a full discrete_lhs, so in that case just return the rest randomized (it should be very few points relatively anyway)
+	if len(utils) == 0:
+		random.shuffle(available_points)
+		return available_points.pop()
+
 	print "determined utils: " + str(utils)
+	# sort highest util
 	highest_util_idx = 0
 	highest_util_val = utils[0]
 	for key,val in utils.items():
@@ -198,5 +169,5 @@ def next_adaptive_sample(current_model_points, available_points, feature_space):
 			highest_util_idx = key
 
 	print "LARGEST utility ({}) belongs to {}".format(highest_util_val, available_points[highest_util_idx])
-	return available_points.pop(highest_util_idx)
-
+	popped = available_points.pop(highest_util_idx)
+	return popped
