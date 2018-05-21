@@ -123,6 +123,15 @@ def utility(model_points, sample):
 # current_model_points = points in current delaunay model
 # available_points = points that can be added to the model
 # feature_space = possible f1 and f2 values, eg [[1,2,3...n][5,10,15,...n]]
+def next_random_sample(current_model_points, available_points, feature_space):
+	print "next_random_sample: sizeof current_model_points + available_points = " + str(len(current_model_points) + len(available_points))
+
+	random.shuffle(available_points)
+	return available_points.pop()
+
+# current_model_points = points in current delaunay model
+# available_points = points that can be added to the model
+# feature_space = possible f1 and f2 values, eg [[1,2,3...n][5,10,15,...n]]
 def next_adaptive_sample(current_model_points, available_points, feature_space):
 	print "next_adaptive_sample: sizeof current_model_points + available_points = " + str(len(current_model_points) + len(available_points))
 	# after some threshold, you can't really LHS sample anymore because there are too many "holes" in the mesh
