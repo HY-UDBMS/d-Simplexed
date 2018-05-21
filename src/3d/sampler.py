@@ -120,6 +120,36 @@ def utility(model_points, sample):
 
 	return utility 
 
+# return complete list of gridded samples.  Grab from 0 the pre-computed gridded values.
+# feature_space = possible f1 and f2 values, eg [[1,2,3...n][5,10,15,...n]]
+# step_sizes = [100, 50, 25, 5, 1] = step sizes to take thru the dataset, in order, e.g. first take passes 100 steps long, then go by 50, 25 etc
+def get_gridding_samples(feature_space, step_sizes):
+	#def grid(features, step_size):
+    result =[]
+    for i in range(len(step_sizes)):
+        x1_1 = []
+        x1_1.append(feature_space[0][0])
+        k = 1
+        while (feature_space[0][0]+k*step_sizes[i]*2<=feature_space[0][-1]):
+         x1_1.append(feature_space[0][0+k*step_sizes[i]])
+         k=k+1
+        # print x1_1
+        
+        x2_2 = []
+        x2_2.append(feature_space[1][0])
+        k = 1
+        while (feature_space[1][0]+k*step_sizes[i]<=feature_space[1][-1]):
+         x2_2.append(feature_space[1][0+k*step_sizes[i]])
+         k=k+1
+        # print x2_2
+        # print (len(x1_1))
+        for j in range(len(x1_1)):
+            for k in range(len(x2_2)):
+                # print "x1, x2:" +str( [x1_1[j],x2_2[k]])
+                if [x1_1[j],x2_2[k]] not in result:
+                    result.append([x1_1[j],x2_2[k]])
+    return result
+
 # current_model_points = points in current delaunay model
 # available_points = points that can be added to the model
 # feature_space = possible f1 and f2 values, eg [[1,2,3...n][5,10,15,...n]]
