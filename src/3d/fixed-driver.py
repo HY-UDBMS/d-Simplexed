@@ -48,16 +48,15 @@ f2_range = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 2
 feature_space = [f1_range,f2_range]
 
 # < 4 (8 total points) and you run into problems forming the triangulation
-#seed_lhs_count = 4 
-#seed_samples = sampler.seed_sample([f1_range, f2_range], seed_lhs_count);
-seed_samples = []
+seed_lhs_count = 4 
+seed_samples = sampler.seed_sample([f1_range, f2_range], seed_lhs_count);
 
-grid_samples = sampler.get_gridding_samples(feature_space, [40,20,10,5,4,2,1])
+#grid_samples = sampler.get_gridding_samples(feature_space, [40,20,10,5,4,2,1])
 
-print "grid_samples=" + str(grid_samples)
+#print "grid_samples=" + str(grid_samples)
 
-for i in range(8):
-	seed_samples.append(grid_samples.pop(0))
+#for i in range(8):
+#	seed_samples.append(grid_samples.pop(0))
 
 seed_samples = [[[f1,f2], lookup_runtime([f1,f2], hist_data)] for [f1, f2] in seed_samples]
 seed_count = len(seed_samples)
@@ -65,11 +64,11 @@ seed_count = len(seed_samples)
 print "Number of seed samples from sampler: " + str(seed_count)
 print "Seed samples from sampler: " + str(seed_samples)
 print "Adding in boundary samples..."
-#boundary_samples = [[f1_range[0],f2_range[0]],[f1_range[0],f2_range[-1]],[f1_range[-1],f2_range[0]],[f1_range[-1],f2_range[-1]]]
-#for boundary_sample in boundary_samples:
-#	if not contains_sample(seed_samples, boundary_sample):
-#		print "add boundary " + str(boundary_sample)
-#		seed_samples.append([boundary_sample, lookup_runtime(boundary_sample, hist_data)]);
+boundary_samples = [[f1_range[0],f2_range[0]],[f1_range[0],f2_range[-1]],[f1_range[-1],f2_range[0]],[f1_range[-1],f2_range[-1]]]
+for boundary_sample in boundary_samples:
+	if not contains_sample(seed_samples, boundary_sample):
+		print "add boundary " + str(boundary_sample)
+		seed_samples.append([boundary_sample, lookup_runtime(boundary_sample, hist_data)]);
 
 print "finished seed samples: " + str(seed_samples)
 print "len(seed_samples) after everything: " + str(len(seed_samples))
@@ -90,10 +89,10 @@ for seed in seed_samples:
 random.shuffle(hist_data)
 test_set = []
 while len(test_set) < test_set_count:
-	next_for_test_set = hist_data[0]
-	# if the point we want to save for the test set is in seed_samples, don't add it
-	if next_for_test_set not in seed_samples:
-		test_set.append(hist_data.pop(0))
+	#next_for_test_set = hist_data[0]
+	#if the point we want to save for the test set is in seed_samples, don't add it
+	#if next_for_test_set not in seed_samples:
+	test_set.append(hist_data.pop(0))
 
 print "len(test_set) = " + str(len(test_set))
 print "len(hist_data) = " + str(len(hist_data))
@@ -187,51 +186,54 @@ model_samples = list(seed_samples)
 # stop at len_hist(data) == 3 because we can't build a model with < 3 points
 while len(hist_data) > 3:
 	# grab next sample and remove from hist_data
-	print "len(hist_data) BEFORE " + str(len(hist_data))
 	#feature_space = [[10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50],[5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]]
-	for i in range(5):
-		found_sample = False
-		while not found_sample:
-			next_sample = grid_samples.pop(0)
-			if next_sample not in [x[0] for x in test_set]:
+	# add 5 at a time
+	#for i in range(5):
+		#found_sample = False
+		#while not found_sample:
+		#	next_sample = grid_samples.pop(0)
+		#	if next_sample not in [x[0] for x in test_set]:
 				# if next_sample in test set, ignore it
-				found_sample = True
+		#		found_sample = True
 
-		print "next_sample=" + str(next_sample)
-		print "next_sample runtime=" + str(lookup_runtime(next_sample, hist_data))
+#		print "next_sample=" + str(next_sample)
+		#print "next_sample runtime=" + str(lookup_runtime(next_sample, hist_data))
 		#next_sample = sampler.next_random_sample(model_samples, hist_data, feature_space) 
-		#next_sample = sampler.next_adaptive_sample(model_samples, hist_data, feature_space)
-		model_samples.append([next_sample,lookup_runtime(next_sample, hist_data)])
+	next_sample = sampler.next_adaptive_sample(model_samples, hist_data, feature_space)
+	#next_sample = [next_sample,lookup_runtime(next_sample, hist_data)]
+	model_samples.append(next_sample)
+
+	print "appending..." + str(next_sample)
 
 	dt = DelaunayModel(model_samples)
 	dt.construct_model()
 
 	# Instanciate a Gaussian Process model
-	#kernel = C(1.0, (1e-3, 1e3)) * RBF(1, (1e-5, 1e5))
-	#gp = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=3)
+	kernel = C(1.0, (1e-3, 1e3)) * RBF(1, (1e-5, 1e5))
+	gp = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=3)
 
-	#gp_training_X = [[f1,f2] for [[f1,f2],runtime] in model_samples]
-	#gp_training_Y = [[runtime] for [[f1,f2],runtime] in model_samples]
+	gp_training_X = [[f1,f2] for [[f1,f2],runtime] in model_samples]
+	gp_training_Y = [[runtime] for [[f1,f2],runtime] in model_samples]
 
-	#gp_testset_X = [[f1,f2] for [[f1,f2],runtime] in test_set]
-	#gp_testset_Y = [[runtime] for [[f1,f2],runtime] in test_set]
+	gp_testset_X = [[f1,f2] for [[f1,f2],runtime] in test_set]
+	gp_testset_Y = [[runtime] for [[f1,f2],runtime] in test_set]
 
 	# Fit to data using Maximum Likelihood Estimation of the parameters
-	#gp.fit(gp_training_X, gp_training_Y)
+	gp.fit(gp_training_X, gp_training_Y)
 
-	#y_pred, sigma = gp.predict(gp_testset_X, return_std=True)
+	y_pred, sigma = gp.predict(gp_testset_X, return_std=True)
 
-	#total_err = 0 
-	#sample_count = 0
-	#for idx,runtime_val in enumerate(gp_testset_Y):
-	#	est_runtime = y_pred[idx]
-	#	actual_runtime = runtime_val
-	#	pct_err = round(abs((actual_runtime - est_runtime) / actual_runtime), 5)
-	#	total_err += pct_err
-	#	sample_count += 1
+	total_err = 0 
+	sample_count = 0
+	for idx,runtime_val in enumerate(gp_testset_Y):
+		est_runtime = y_pred[idx]
+		actual_runtime = runtime_val
+		pct_err = round(abs((actual_runtime - est_runtime) / actual_runtime), 5)
+		total_err += pct_err
+		sample_count += 1
 
-	#mape_gp = round(total_err/sample_count*100,2)
-	mape_gp = 0
+	mape_gp = round(total_err/sample_count*100,2)
+	#mape_gp = 0
 	# Use basic multivariate linear regression (X,Y)-->Z
 	lm = linear_model.LinearRegression()
 	model = lm.fit(gp_training_X, gp_training_Y)
