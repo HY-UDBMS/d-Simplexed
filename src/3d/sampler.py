@@ -173,14 +173,12 @@ def next_adaptive_sample(current_model_points, available_points, feature_space):
 	next_samples = []
 
 	# for md model, the LHS samples we get from lhs_sample_v2 is 21
-	lhs_sample_size = 24
+	lhs_sample_size = len(feature_space[0])
 	if len(available_points) < lhs_sample_size:
 		# not enough points to get a full LHS sample, so we'll consider the rest at once (edge case)
 		print "Not enough points remain to LHS"
 		next_samples = [[f1,f2] for [[f1,f2],rt] in available_points]
 	else:
-		#random.shuffle(available_points)
-		#next_samples = available_points[:10] # grab 10 at random
 		print "discrete_lhs current_model_points" + str(current_model_points)
 		print "discrete_lhs feature_space" + str(feature_space)
 		next_samples = discrete_lhs(current_model_points, feature_space, lhs_sample_size)
