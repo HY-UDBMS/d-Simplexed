@@ -5,9 +5,10 @@ import numpy as np
 from delaunaymodel import DelaunayModel
 import sampler
 import random
+import sys
 
 """
-This script saves 20% of the historical runtime data to use as a testing set
+This script saves *test_set_ratio* of the historical runtime data to use as a testing set
 """
 
 def lookup_runtime(rt_cfg, hist_data):
@@ -22,9 +23,22 @@ def contains_sample(samples, sample):
 			return True
 	return False
 
+args = sys.argv[1:]
+
+if not len(args) == 1:
+	print "Usage: fixed-driver.py <input-file>"
+	sys.exit(-1)
+
 # f1<tab>f2<tab>runtime(f1,f2)
 #hist_data_file = "hist-5g-sm.csv"
-hist_data_file = "hist-5g-md.csv"
+#hist_data_file = "hist-5g-md.csv"
+hist_data_file = args[0]
+
+# how many points to add to the model with each iteration
+iterative_step_size = 5
+
+# percent (as decimal) of hist_data to reserve for testing
+test_set_ratio = 0.10
 
 print "Reading input from file: " + hist_data_file
 
@@ -36,15 +50,17 @@ with open(hist_data_file, "r") as ins:
 		hist_data.append([[int(split[0]), int(split[1])], round(100*float(split[2]), 1)])
 
 input_len = len(hist_data)
-test_set_count = int(input_len * 0.2)
+test_set_count = int(input_len * test_set_ratio)
 print "Size of historical data pool: " + str(input_len)
 
 # TODO: make this dynamic
 # len(f1) must equal len(f2)
-f1_range = [10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50]
-f2_range = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]
+#f1_range = [10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50]
+#f2_range = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]
 #f1_range = np.arange(40,242,2).tolist()
 #f2_range = np.arange(60,161,1).tolist()
+f1_range = np.arange(1,121,1).tolist()
+f2_range = np.arange(1,121,1).tolist()
 feature_space = [f1_range,f2_range]
 
 # < 4 (8 total points) and you run into problems forming the triangulation
@@ -188,7 +204,7 @@ while len(hist_data) > 3:
 	# grab next sample and remove from hist_data
 	#feature_space = [[10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50],[5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]]
 	# add 5 at a time
-	#for i in range(5):
+	for i in range(iterative_step_size):
 		#found_sample = False
 		#while not found_sample:
 		#	next_sample = grid_samples.pop(0)
@@ -196,12 +212,8 @@ while len(hist_data) > 3:
 				# if next_sample in test set, ignore it
 		#		found_sample = True
 
-#		print "next_sample=" + str(next_sample)
-		#print "next_sample runtime=" + str(lookup_runtime(next_sample, hist_data))
-		#next_sample = sampler.next_random_sample(model_samples, hist_data, feature_space) 
-	next_sample = sampler.next_adaptive_sample(model_samples, hist_data, feature_space)
-	#next_sample = [next_sample,lookup_runtime(next_sample, hist_data)]
-	model_samples.append(next_sample)
+		next_sample = sampler.next_adaptive_sample(model_samples, hist_data, feature_space)
+		model_samples.append(next_sample)
 
 	print "appending..." + str(next_sample)
 
