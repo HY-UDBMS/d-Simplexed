@@ -1,3 +1,6 @@
+"""
+    Sampling utils and implementations used in Delaunay Triangulation model.
+"""
 from pyDOE import *
 from delaunaymodel import DelaunayModel
 import random

@@ -10,8 +10,6 @@ class DelaunayModel:
 			print "[Debug] " + message
 
 	def __init__(self, points):
-		# TODO pass in --> self.model_points = points
-		# <[f1,f2],runtime(f1, f2)>
 		self.model_points = points
 
 	def get_runtime(self, point):

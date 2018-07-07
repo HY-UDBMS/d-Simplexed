@@ -9,6 +9,15 @@ import sys
 
 """
 This script saves *test_set_ratio* of the historical runtime data to use as a testing set
+Sorry, it is a little unorganized.
+
+It reads an input file containing historical test data, and from that, (1) takes the initial seed samples, then (2) builds the DT model, (3) compare MAPE using Gaussian Process method, (4) compare MAPE using linear regression method, (5) compare MAPE using Delaunay Triangulation method.
+
+After the initial sampels have been selected, we build the 3 models and then add points to them in *iterative_step_size* steps, then report the MAPE accuracy for each.
+
+You can run and pipe the results into a CSV file easily by doing (e.g.):
+
+python fixed-driver.py wc80g.csv | grep --line-buffered -E "\[Reporting"
 """
 
 def lookup_runtime(rt_cfg, hist_data):
@@ -30,8 +39,6 @@ if not len(args) == 1:
 	sys.exit(-1)
 
 # f1<tab>f2<tab>runtime(f1,f2)
-#hist_data_file = "hist-5g-sm.csv"
-#hist_data_file = "hist-5g-md.csv"
 hist_data_file = args[0]
 
 # how many points to add to the model with each iteration
@@ -57,24 +64,30 @@ print "Size of historical data pool: " + str(input_len)
 # len(f1) must equal len(f2)
 #f1_range = [10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50]
 #f2_range = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]
-#f1_range = np.arange(40,242,2).tolist()
-#f2_range = np.arange(60,161,1).tolist()
-f1_range = np.arange(1,121,1).tolist()
-f2_range = np.arange(1,121,1).tolist()
+f1_range = np.arange(40,242,2).tolist()
+f2_range = np.arange(60,161,1).tolist()
+#f1_range = np.arange(1,121,1).tolist()
+#f2_range = np.arange(1,121,1).tolist()
+#f1_range = np.arange(1,101,1).tolist()
+#f2_range = np.arange(1,101,1).tolist()
 feature_space = [f1_range,f2_range]
 
 # < 4 (8 total points) and you run into problems forming the triangulation
-seed_lhs_count = 4 
-seed_samples = sampler.seed_sample([f1_range, f2_range], seed_lhs_count);
+#seed_lhs_count = 4 
+#seed_samples = sampler.seed_sample([f1_range, f2_range], seed_lhs_count);
 
+seed_samples = []
 #grid_samples = sampler.get_gridding_samples(feature_space, [40,20,10,5,4,2,1])
 
 #print "grid_samples=" + str(grid_samples)
 
-#for i in range(8):
+# grab 8 grid samples
+random.shuffle(hist_data)
+for i in range(4):
+	seed_samples.append(hist_data.pop())
 #	seed_samples.append(grid_samples.pop(0))
 
-seed_samples = [[[f1,f2], lookup_runtime([f1,f2], hist_data)] for [f1, f2] in seed_samples]
+#seed_samples = [[[f1,f2], lookup_runtime([f1,f2], hist_data)] for [f1, f2] in seed_samples]
 seed_count = len(seed_samples)
 
 print "Number of seed samples from sampler: " + str(seed_count)
@@ -105,9 +118,9 @@ for seed in seed_samples:
 random.shuffle(hist_data)
 test_set = []
 while len(test_set) < test_set_count:
-	#next_for_test_set = hist_data[0]
+#	next_for_test_set = hist_data[0]
 	#if the point we want to save for the test set is in seed_samples, don't add it
-	#if next_for_test_set not in seed_samples:
+#	if next_for_test_set not in seed_samples:
 	test_set.append(hist_data.pop(0))
 
 print "len(test_set) = " + str(len(test_set))
@@ -154,24 +167,24 @@ for idx,runtime_val in enumerate(gp_testset_Y):
 
 mape_gp = round(total_err/sample_count*100,2)
 
-# Use basic multivariate linear regression (X,Y)-->Z
-lm = linear_model.LinearRegression()
-model = lm.fit(gp_training_X, gp_training_Y)
+if False:
+	# Use basic multivariate linear regression (X,Y)-->Z
+	lm = linear_model.LinearRegression()
+	model = lm.fit(gp_training_X, gp_training_Y)
 
-#testX = [(25, x) for x in np.linspace(1, 70, 1000)]
-#print(testX)
-# # Make the prediction on the meshed x-axis (ask for MSE as well)
-y_pred = lm.predict(gp_testset_X)
-total_err = 0 
-sample_count = 0
-for idx,runtime_val in enumerate(gp_testset_Y):
-	est_runtime = y_pred[idx]
-	actual_runtime = runtime_val
-	pct_err = round(abs((actual_runtime - est_runtime) / actual_runtime), 5)
-	total_err += pct_err
-	sample_count += 1
+	# Make the prediction on the meshed x-axis (ask for MSE as well)
+	y_pred = lm.predict(gp_testset_X)
+	total_err = 0 
+	sample_count = 0
+	for idx,runtime_val in enumerate(gp_testset_Y):
+		est_runtime = y_pred[idx]
+		actual_runtime = runtime_val
+		pct_err = round(abs((actual_runtime - est_runtime) / actual_runtime), 5)
+		total_err += pct_err
+		sample_count += 1
 
-mape_lr = round(total_err/sample_count*100,2)
+mape_lr = 0
+#mape_lr = round(total_err/sample_count*100,2)
 
 # build initial model with seed_samples
 dt = DelaunayModel(seed_samples)
@@ -202,7 +215,6 @@ model_samples = list(seed_samples)
 # stop at len_hist(data) == 3 because we can't build a model with < 3 points
 while len(hist_data) > 3:
 	# grab next sample and remove from hist_data
-	#feature_space = [[10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50],[5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]]
 	# add 5 at a time
 	for i in range(iterative_step_size):
 		#found_sample = False
@@ -212,9 +224,11 @@ while len(hist_data) > 3:
 				# if next_sample in test set, ignore it
 		#		found_sample = True
 
-		next_sample = sampler.next_adaptive_sample(model_samples, hist_data, feature_space)
+		#next_sample = sampler.next_adaptive_sample(model_samples, hist_data, feature_space)
+		#next_sample = [next_sample,lookup_runtime(next_sample, hist_data)]
+		next_sample = hist_data.pop() 
 		model_samples.append(next_sample)
-
+		
 	print "appending..." + str(next_sample)
 
 	dt = DelaunayModel(model_samples)
@@ -222,7 +236,7 @@ while len(hist_data) > 3:
 
 	# Instanciate a Gaussian Process model
 	kernel = C(1.0, (1e-3, 1e3)) * RBF(1, (1e-5, 1e5))
-	gp = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=3)
+	#gp = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=3)
 
 	gp_training_X = [[f1,f2] for [[f1,f2],runtime] in model_samples]
 	gp_training_Y = [[runtime] for [[f1,f2],runtime] in model_samples]
@@ -231,9 +245,9 @@ while len(hist_data) > 3:
 	gp_testset_Y = [[runtime] for [[f1,f2],runtime] in test_set]
 
 	# Fit to data using Maximum Likelihood Estimation of the parameters
-	gp.fit(gp_training_X, gp_training_Y)
+	#gp.fit(gp_training_X, gp_training_Y)
 
-	y_pred, sigma = gp.predict(gp_testset_X, return_std=True)
+	#y_pred, sigma = gp.predict(gp_testset_X, return_std=True)
 
 	total_err = 0 
 	sample_count = 0
@@ -247,21 +261,23 @@ while len(hist_data) > 3:
 	mape_gp = round(total_err/sample_count*100,2)
 	#mape_gp = 0
 	# Use basic multivariate linear regression (X,Y)-->Z
-	lm = linear_model.LinearRegression()
-	model = lm.fit(gp_training_X, gp_training_Y)
+	if False:
+		lm = linear_model.LinearRegression()
+		model = lm.fit(gp_training_X, gp_training_Y)
 
-	# # Make the prediction on the meshed x-axis (ask for MSE as well)
-	y_pred = lm.predict(gp_testset_X)
-	total_err = 0 
-	sample_count = 0
-	for idx,runtime_val in enumerate(gp_testset_Y):
-		est_runtime = y_pred[idx]
-		actual_runtime = runtime_val
-		pct_err = round(abs((actual_runtime - est_runtime) / actual_runtime), 5)
-		total_err += pct_err
-		sample_count += 1
+		# # Make the prediction on the meshed x-axis (ask for MSE as well)
+		y_pred = lm.predict(gp_testset_X)
+		total_err = 0 
+		sample_count = 0
+		for idx,runtime_val in enumerate(gp_testset_Y):
+			est_runtime = y_pred[idx]
+			actual_runtime = runtime_val
+			pct_err = round(abs((actual_runtime - est_runtime) / actual_runtime), 5)
+			total_err += pct_err
+			sample_count += 1
 
-	mape_lr = round(total_err/sample_count*100, 2)
+	mape_lr = 0
+	#mape_lr = round(total_err/sample_count*100, 2)
 
 	total_err = 0 
 	sample_count = 0

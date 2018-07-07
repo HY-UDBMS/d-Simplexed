@@ -1,4 +1,9 @@
 from pyDOE import *
+from delaunaymodel import DelaunayModel
+
+dt = DelaunayModel(None)
+
+dt.construct_model()
 
 # number of decimal places to preserve in sample
 sample_precision = 3

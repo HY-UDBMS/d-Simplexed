@@ -1,3 +1,7 @@
+/*
+ * Javascript library using d3.js and its delaunay/voronoi package to generate and display Delaunay Triangulations in 3d.
+ */
+
 // init pattern: https://stackoverflow.com/questions/2190801/passing-parameters-to-javascript-files
 var ThesisUtils = ThesisUtils || (function(){
     var _args = {}; // private

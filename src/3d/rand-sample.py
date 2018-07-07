@@ -1,3 +1,6 @@
+"""
+    A utility script for randomly sampling n samples from a vmmem x vcore space.
+"""
 import sys
 import random
 

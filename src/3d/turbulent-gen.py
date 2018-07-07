@@ -1,3 +1,6 @@
+"""
+    Script for generating an artificially turbulent 3d space.
+"""
 import random
 
 def surface_generation(space): #turbulent surface
@@ -61,3 +64,4 @@ if __name__ == "__main__":
     space = 40
     for row in surface_generation(space):
         print (str(row[0])+"\t"+str(row[1])+"\t"+str(row[2]))
+

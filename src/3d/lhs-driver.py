@@ -1,3 +1,6 @@
+"""
+This is a scratch file for testing the sampler.discrete_lhs functionality
+"""
 import sampler
 
 f1 = [10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50]
