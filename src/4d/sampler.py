@@ -1,15 +1,32 @@
 from scipy.spatial import Delaunay
 import numpy as np
-import collections
 import random
 import itertools
 
-
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
+from sklearn.linear_model import LinearRegression
 
 #input array, in 2-d it is points
 def build_triangulation(array):
     tri = Delaunay(array)
     return tri
+
+
+#input list X parameters, Y runing time
+def build_gp_model(X,Y):
+    # Instanciate a Gaussian Process model
+    kernel = C(1.0, (1e-3, 1e3)) * RBF(1, (1e-5, 1e5))
+    gp = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=3)
+    # Fit to data using Maximum Likelihood Estimation of the parameters
+    gp.fit(X, Y)
+    return gp
+
+
+#input list X parameters, Y running time
+def build_lr_model(X,Y):
+    lr = LinearRegression().fit(X, Y)
+    return lr
 
 #find the simplex
 def find_simplex(tri, array_data, test):
@@ -87,17 +104,35 @@ def precision(tri, samples, samples_with_t, test_with_t):
                 if list(s) == k[:num_features]:
                     simplex_result.append(k)
                     break
+
         parameters = [[int(x[0]), int(x[1]), int(x[2]), 1] for x in simplex_result]
         T = [float(x[3]) for x in simplex_result]
 
-        # if abs(t[3] - np.dot(solve_linear(parameters, T), t[:3]+[1]))/t[3]>0.5:
-        #     print('asdf')
-        #     print(np.dot(solve_linear(parameters, T), t[:3]+[1]))
-        #     print(t)
-        #     print(abs(t[3] - np.dot(solve_linear(parameters, T), t[:3]+[1]))/t[3])
-        preci.append(abs(t[3] - np.dot(solve_linear(parameters, T), t[:3]+[1]))/t[3])  #|(Ti-Ti')|/Ti
+        # |(Ti-Ti')|/Ti
+        preci.append(abs(t[3] - np.dot(solve_linear(parameters, T), t[:3]+[1]))/t[3])
     # print(preci)
-    return sum(preci)/len(preci)
+    return sum(preci)/len(preci) #avg
+
+
+def precision_gp(gp, samples_with_t, test_with_t):
+
+    T = [x[3] for x in test_with_t]
+    y_pre, sigma = gp.predict([x[:3] for x in test_with_t], return_std=True)
+    # print(list(y_pre))
+    # print(T)
+    preci = list(abs(T-y_pre)/T)
+    # print(preci)
+    return sum(preci) / len(preci)  # avg
+
+def precision_lr(lr, samples_with_t, test_with_t):
+
+    T = [x[3] for x in test_with_t]
+    y_pre = lr.predict([x[:3] for x in test_with_t])
+    # print(list(y_pre))
+    # print(T)
+    preci = list(abs(T-y_pre)/T)
+    # print(preci)
+    return sum(preci) / len(preci)  # avg
 
 def prediction_for_samples(tri, samples, samples_with_t, tests):
     new_tests=[]
@@ -146,6 +181,7 @@ def main_driver(feature_space, ground_data):
     sample_size = 1
     #initial seeds
     samples = boundary(feature_space)
+    print('initial size: '+str(len(samples)))
     num_parameters = 3
     samples_with_t = [x for x in ground_data if x[:num_parameters] in samples]
 
@@ -160,45 +196,55 @@ def main_driver(feature_space, ground_data):
     tri = build_triangulation(samples)
 
     #initial linear model
+    lr = build_lr_model([x[:3] for x in samples_with_t], [x[3] for x in samples_with_t])
 
     #initial gp model
+    gp = build_gp_model([x[:3] for x in samples_with_t], [x[3] for x in samples_with_t])
+
 
     cnt = 1
-    rounds = 90
-    while cnt <= rounds:
+    rounds = 51
 
-        preci = precision(tri, samples, samples_with_t, test_with_t)
-        print('rounds: '+str(cnt))
-        print('precision: ' + str(preci))
+    filename = 'data/kmean_result.dat'
+    with open(filename, "a") as f:
 
-        new_sample_dist = []
-        while new_sample_dist == []:
-            new_samples = [x for x in discrete_lhs(feature_space, sample_size) if x not in test and x not in samples]
-            # print(new_samples)
-            if new_samples != []:
-                new_samples_t_ = prediction_for_samples(tri, samples, samples_with_t, new_samples)
-                new_sample_dist = utility(tri, samples, samples_with_t, new_samples_t_)
+        while cnt <= rounds:
 
-        # add one of lhs samples
-        # samples.append(new_sample[:3])
-        # samples_with_t.append([x for x in ground_data if x[:3]==new_sample[:3]][0])
+            #precision for tri
+            preci = precision(tri, samples, samples_with_t, test_with_t)
+            print('rounds: '+str(cnt))
+            print('tri precision: ' + str(preci))
 
-        # add k of lhs samples
-        k=10
-        samples = samples +[x[:3] for x in new_sample_dist[:k]]
-        samples_with_t = samples_with_t + [x for x in ground_data if x[:3] in [x[:3] for x in new_sample_dist[:k]]]
+            preci_gp = precision_gp(gp, samples_with_t, test_with_t)
+            print('rounds: '+str(cnt))
+            print('gp precision: ' + str(preci_gp))
 
-        # add all group of lhs samples
-        # samples = samples+new_samples
-        # samples_with_t = samples_with_t+[x for x in ground_data if x[:3] in new_samples]
+            preci_lr = precision_lr(lr, samples_with_t, test_with_t)
+            print('rounds: '+str(cnt))
+            print('lr precision: ' + str(preci_lr))
 
-        # print('asdasdasdada')
-        # print(len(samples))
-        # print(samples)
 
-        tri = build_triangulation(samples)
+            f.write(str(8+10*(cnt-1)) + ' ' + str(round(preci*100, 3)) + ' ' +  str(round(preci_gp*100,3)) + ' ' + str(round(preci_lr*100,3)) + "\n")  # quantity incategory
 
-        cnt = cnt + 1
+            new_sample_dist = []
+            while new_sample_dist == []:
+                new_samples = [x for x in discrete_lhs(feature_space, sample_size) if x not in test and x not in samples]
+                # print(new_samples)
+                if new_samples != []:
+                    new_samples_t_ = prediction_for_samples(tri, samples, samples_with_t, new_samples)
+                    new_sample_dist = utility(tri, samples, samples_with_t, new_samples_t_)
+
+            # add k of lhs samples
+            k=10
+            samples = samples +[x[:3] for x in new_sample_dist[:k]]
+            samples_with_t = samples_with_t + [x for x in ground_data if x[:3] in [x[:3] for x in new_sample_dist[:k]]]
+
+            #update model todo in a incremental way
+            tri = build_triangulation(samples)
+            gp = build_gp_model([x[:3] for x in samples_with_t], [x[3] for x in samples_with_t])
+            lr = build_lr_model([x[:3] for x in samples_with_t], [x[3] for x in samples_with_t])
+
+            cnt = cnt + 1
 
 
 
@@ -247,3 +293,4 @@ def test_driver():
 
 # test()
 test_driver()
+# print(a-b)
